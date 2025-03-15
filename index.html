@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> تعا نشوف ذكائك</title>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin-top: 50px;
+        }
+        
+        h1 {
+            color: #ff6b6b;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .riddle-container {
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .riddle {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .option {
+            padding: 10px 15px;
+            background-color: #fff;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .option:hover {
+            background-color: #f0f7ff;
+            border-color: #67a3ff;
+        }
+        
+        .option.selected {
+            background-color: #67a3ff;
+            color: white;
+            border-color: #4b84e5;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #4b84e5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        button:hover:not(:disabled) {
+            background-color: #3a6cbd;
+        }
+        
+        .progress {
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+        }
+        
+        .result-container {
+            text-align: center;
+            display: none;
+        }
+        
+        .result-title {
+            font-size: 24px;
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        
+        .result-score {
+            font-size: 36px;
+            color: #4b84e5;
+            margin-bottom: 20px;
+        }
+        
+        .result-message {
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f7ff;
+            border-radius: 10px;
+        }
+        
+        .restart-btn {
+            background-color: #ff6b6b;
+        }
+        
+        .restart-btn:hover {
+            background-color: #e55c5c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>تعا نشوف ذكائكة</h1>
+        
+        <div class="progress">السؤال <span id="current-question">1</span> من <span id="total-questions">5</span></div>
+        
+        <div class="riddle-container">
+            <div class="riddle" id="riddle-text">جاري تحميل الألغاز...</div>
+            <div class="options" id="options-container">
+                <!-- Options will be added here dynamically -->
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" disabled>السابق</button>
+            <button id="next-btn" disabled>التالي</button>
+        </div>
+        
+        <div class="result-container" id="result-container">
+            <div class="result-title">نتيجة اختبار الذكاء العبثي</div>
+            <div class="result-score">نسبة ذكائك: <span id="score-percentage">0</span>%</div>
+            <div class="result-message" id="result-message"></div>
+            <button class="restart-btn" id="restart-btn">إعادة الاختبار</button>
+        </div>
+    </div>
+
+    <script>
+        // بيانات الألغاز
+        const riddles = [
+            {
+                question: "إذا كان البطيخ يسبح في البحر، والتفاح يطير في السماء، فماذا يفعل الموز؟",
+                options: [
+                    "يرقص على جليد الثلاجة",
+                    "يلعب شطرنج مع البرتقال",
+                    "يتفلسف حول معنى الحياة",
+                    "يكتب قصيدة شعر عن الزبادي"
+                ],
+                correctIndex: 2
+            },
+            {
+                question: "أربعة أشخاص دخلوا غرفة، خرج خمسة. كيف حدث ذلك؟",
+                options: [
+                    "دخل شخص خامس من النافذة",
+                    "أحدهم انشطر إلى نصفين",
+                    "كان أحدهم حاملاً وولدت في الغرفة",
+                    "خرج أحدهم مرتين"
+                ],
+                correctIndex: 3
+            },
+            {
+                question: "ما هو الشيء الذي كلما زاد نقص؟",
+                options: [
+                    "الثقب",
+                    "العمر",
+                    "الصمت",
+                    "رصيد البنك بعد التسوق"
+                ],
+                correctIndex: 0
+            },
+            {
+                question: "إذا كان الكرسي ابن الطاولة، فمن هو والد الثلاجة؟",
+                options: [
+                    "المكيف",
+                    "الفرن",
+                    "لا أحد، فالأثاث لا يتناسل",
+                    "متجر الأثاث"
+                ],
+                correctIndex: 1
+            },
+            {
+                question: "ما هو الشيء الذي يمشي ويقف وليس له أرجل؟",
+                options: [
+                    "الساعة",
+                    "الماء",
+                    "الظل",
+                    "النكتة السيئة"
+                ],
+                correctIndex: 3
+            }
+        ];
+
+        // متغيرات عامة
+        let currentRiddleIndex = 0;
+        const userAnswers = Array(riddles.length).fill(null);
+        
+        // العناصر في الصفحة
+        const riddleTextElement = document.getElementById('riddle-text');
+        const optionsContainerElement = document.getElementById('options-container');
+        const prevButton = document.getElementById('prev-btn');
+        const nextButton = document.getElementById('next-btn');
+        const currentQuestionElement = document.getElementById('current-question');
+        const totalQuestionsElement = document.getElementById('total-questions');
+        const resultContainerElement = document.getElementById('result-container');
+        const scorePercentageElement = document.getElementById('score-percentage');
+        const resultMessageElement = document.getElementById('result-message');
+        const restartButton = document.getElementById('restart-btn');
+        
+        // تحميل أول لغز
+        window.onload = function() {
+            totalQuestionsElement.textContent = riddles.length;
+            loadRiddle(currentRiddleIndex);
+            
+            // إضافة مستمع حدث لزر إعادة الاختبار
+            restartButton.addEventListener('click', restartQuiz);
+        };
+        
+        // وظيفة تحميل اللغز
+        function loadRiddle(index) {
+            const riddle = riddles[index];
+            riddleTextElement.textContent = riddle.question;
+            
+            // إفراغ حاوية الخيارات
+            optionsContainerElement.innerHTML = '';
+            
+            // إضافة الخيارات
+            riddle.options.forEach((option, optionIndex) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                if (userAnswers[index] === optionIndex) {
+                    optionElement.classList.add('selected');
+                }
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => selectOption(optionIndex));
+                optionsContainerElement.appendChild(optionElement);
+            });
+            
+            // تحديث رقم السؤال الحالي
+            currentQuestionElement.textContent = index + 1;
+            
+            // تفعيل/تعطيل الأزرار
+            prevButton.disabled = index === 0;
+            nextButton.disabled = userAnswers[index] === null;
+            
+            // تغيير نص الزر "التالي" إذا كان آخر سؤال
+            if (index === riddles.length - 1) {
+                nextButton.textContent = 'عرض النتيجة';
+            } else {
+                nextButton.textContent = 'التالي';
+            }
+        }
+        
+        // وظيفة اختيار الإجابة
+        function selectOption(optionIndex) {
+            userAnswers[currentRiddleIndex] = optionIndex;
+            
+            // تحديث واجهة المستخدم
+            const options = optionsContainerElement.querySelectorAll('.option');
+            options.forEach((option, index) => {
+                if (index === optionIndex) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+            
+            // تفعيل زر التالي
+            nextButton.disabled = false;
+        }
+        
+        // مستمعي الحدث للأزرار
+        prevButton.addEventListener('click', () => {
+            if (currentRiddleIndex > 0) {
+                currentRiddleIndex--;
+                loadRiddle(currentRiddleIndex);
+            }
+        });
+        
+        nextButton.addEventListener('click', () => {
+            if (currentRiddleIndex < riddles.length - 1) {
+                currentRiddleIndex++;
+                loadRiddle(currentRiddleIndex);
+            } else {
+                showResults();
+            }
+        });
+        
+        // وظيفة عرض النتائج
+        function showResults() {
+            const riddleContainer = document.querySelector('.riddle-container');
+            const controls = document.querySelector('.controls');
+            const progress = document.querySelector('.progress');
+            
+            // إخفاء عناصر الاختبار
+            riddleContainer.style.display = 'none';
+            controls.style.display = 'none';
+            progress.style.display = 'none';
+            
+            // حساب النتيجة
+            let correctAnswers = 0;
+            userAnswers.forEach((answer, index) => {
+                if (answer === riddles[index].correctIndex) {
+                    correctAnswers++;
+                }
+            });
+            
+            const scorePercentage = Math.round((correctAnswers / riddles.length) * 100);
+            scorePercentageElement.textContent = scorePercentage;
+            
+            // تحديد الرسالة حسب النتيجة
+            let resultMessage = '';
+            if (scorePercentage < 20) {
+                resultMessage = 'يبدو أنك منطقي جداً للألغاز العبثية! ربما تحتاج إلى المزيد من الجنون في حياتك.';
+            } else if (scorePercentage < 40) {
+                resultMessage = 'أنت تفكر خارج الصندوق... لكن الصندوق لا يزال مرئياً لك!';
+            } else if (scorePercentage < 60) {
+                resultMessage = 'ذكاؤك العبثي في المستوى المتوسط. يمكنك رؤية العالم بعدسة مشوهة قليلاً!';
+            } else if (scorePercentage < 80) {
+                resultMessage = 'رائع! أنت تتقن فن العبثية بشكل جيد. هل تتحدث مع الموز أيضاً؟';
+            } else {
+                resultMessage = 'مذهل! أنت عبقري عبثي بامتياز! يجب أن تفكر في مهنة كمؤلف للنكات السريالية.';
+            }
+            
+            resultMessageElement.textContent = resultMessage;
+            
+            // إظهار حاوية النتائج
+            resultContainerElement.style.display = 'block';
+        }
+        
+        // وظيفة إعادة الاختبار
+        function restartQuiz() {
+            // إعادة تعيين الإجابات
+            userAnswers.fill(null);
+            currentRiddleIndex = 0;
+            
+            // إعادة عرض عناصر الاختبار
+            const riddleContainer = document.querySelector('.riddle-container');
+            const controls = document.querySelector('.controls');
+            const progress = document.querySelector('.progress');
+            
+            riddleContainer.style.display = 'block';
+            controls.style.display = 'flex';
+            progress.style.display = 'block';
+            
+            // إخفاء النتائج
+            resultContainerElement.style.display = 'none';
+            
+            // تحميل السؤال الأول
+            loadRiddle(currentRiddleIndex);
+        }
+    </script>
+</body>
+</html>
